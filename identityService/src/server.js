@@ -65,7 +65,7 @@ const sensitiveEndpointsLimiter = rateLimit({
   standardHeaders: true, // headers can be used to communicate the number of remaining requests
   legacyHeaders: false,
   handler: (req, res) => {
-    logger.warn(`Sensitive endpoint rate limit exceeded for IP : ${req.ip}`);
+    logger.warn(`Sensitive endpoint rate limit exceeded for IP  : ${req.ip}`);
     res.status(429).json({
       success: false,
       message: "Too many requests",
