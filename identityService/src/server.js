@@ -62,7 +62,7 @@ app.use((req, res, next) => {
 const sensitiveEndpointsLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 50, // Limit each IP to 50 requests per windowMs
-  standardHeaders: true, // headers can be used to communicate the number of remaining requests
+  standardHeaders: true, // headers can be used to communicate the number of remaining requests eg: X-RateLimit-Limit 
   legacyHeaders: false,
   handler: (req, res) => {
     logger.warn(`Sensitive endpoint rate limit exceeded for IP  : ${req.ip}`);
