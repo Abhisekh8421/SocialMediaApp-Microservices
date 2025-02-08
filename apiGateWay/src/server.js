@@ -8,6 +8,7 @@ import { RedisStore } from "rate-limit-redis";
 import { logger } from "./utils/logger.js";
 import proxy from "express-http-proxy";
 import { errorHandler } from "./middleware/errorHandler.js";
+import { validateToken } from "./middleware/authMiddleware.js";
 dotenv.config();
 
 const app = express();
@@ -52,13 +53,13 @@ const proxyOptions = {
   },
   proxyErrorHandler: (err, res, next) => {
     logger.error(`Proxy error:${err.message}`);
-    res.status(500).message({
+    res.status(500).json({
       message: "Internal server error",
       error: err.message,
     });
   },
 };
-
+//setting up proxy for identity service
 app.use(
   "/v1/auth",
   proxy(process.env.IDENTITY_SERVICE_URL, {
@@ -76,10 +77,36 @@ app.use(
   })
 );
 
+//setting up proxy for post service
+
+app.use(
+  "/v1/posts",
+  validateToken,
+  proxy(process.env.POST_SERVICE_URL, {
+    ...proxyOptions,
+    proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
+      proxyReqOpts.headers["Content-Type"] = "application/json";
+      // console.log("User in srcReq:", srcReq.user); debugging
+      proxyReqOpts.headers["x-user-id"] = srcReq.user.userId;
+
+      return proxyReqOpts;
+    },
+    userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
+      logger.info(
+        `Response received from Post service : ${proxyRes.statusCode}`
+      );
+      return proxyResData;
+    },
+  })
+);
+
 app.use(errorHandler);
 app.listen(PORT, () => {
   logger.info(`API Gateway is running on port ${PORT}`);
   logger.info(
     `Identity Service is running on port ${process.env.IDENTITY_SERVICE_URL}`
+  );
+  logger.info(
+    `post Service is running on port ${process.env.POST_SERVICE_URL}`
   );
 });
