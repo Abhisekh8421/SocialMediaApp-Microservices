@@ -1,6 +1,7 @@
 import { v2 as cloudinary } from "cloudinary";
 import { logger } from "./logger.js";
-import { error } from "winston";
+import dotenv from "dotenv";
+dotenv.config();
 
 cloudinary.config({
   cloud_name: process.env.cloud_name,
@@ -28,4 +29,4 @@ const uploadMediaToCloudinary = (file) => {
   });
 };
 
-export {uploadMediaToCloudinary}
+export { uploadMediaToCloudinary };

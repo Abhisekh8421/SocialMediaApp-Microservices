@@ -100,6 +100,39 @@ app.use(
   })
 );
 
+//setting up proxy for Media service
+
+app.use(
+  "/v1/media",
+  validateToken,
+  proxy(process.env.MEDIA_SERVICE_URL, {
+    ...proxyOptions,
+    proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
+      proxyReqOpts.headers["x-user-id"] = srcReq.user.userId;
+      if (
+        !srcReq.headers["content-type"] ||
+        !srcReq.headers["content-type"]?.startsWith("multipart/form-data")
+      ) {
+        proxyReqOpts.headers["Content-Type"] = "application/json";
+      }
+      // else {
+      //   proxyReqOpts.headers["Content-Type"] = srcReq.headers["content-type"];
+      // }
+      return proxyReqOpts;
+    },
+    userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
+      logger.info(
+        `Response received from Media service : ${proxyRes.statusCode}`
+      );
+      return proxyResData;
+    },
+    parseReqBody: false,
+  })
+);
+//parseReqBody: false ***imp** for media service
+// In http-proxy-middleware, the default behavior is that it parses the request body before forwarding it to the target service.
+// This works fine for JSON requests, but it breaks file uploads (multipart/form-data).
+
 app.use(errorHandler);
 app.listen(PORT, () => {
   logger.info(`API Gateway is running on port ${PORT}`);
@@ -108,5 +141,8 @@ app.listen(PORT, () => {
   );
   logger.info(
     `post Service is running on port ${process.env.POST_SERVICE_URL}`
+  );
+  logger.info(
+    `Media Service is running on port ${process.env.MEDIA_SERVICE_URL}`
   );
 });
