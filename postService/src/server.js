@@ -9,6 +9,7 @@ import { errorHandler } from "./middlewares/errorHandler.js";
 import { logger } from "./utils/logger.js";
 import { rateLimit } from "express-rate-limit";
 import { RedisStore } from "rate-limit-redis";
+import { connectToRabbitMq } from "./utils/rabbitmq.js";
 dotenv.config();
 
 const app = express();
@@ -62,9 +63,21 @@ app.use(
 
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  logger.info(`Identity service running on port ${PORT}`);
-});
+async function startServer() {
+  try {
+    await connectToRabbitMq();
+    app.listen(PORT, () => {
+      logger.info(`Identity service running on port ${PORT}`);
+    });
+  } catch (error) {
+    logger.error("Failed to connect to server", error);
+    process.exit(1); //Exit the process if RabbitMQ fails
+  }
+}
+// process.exit(1) stops the Node.js process and exits with a failure code (1).
+// It signals that something went wrong.
+
+startServer();
 
 //unhandled promise rejection
 

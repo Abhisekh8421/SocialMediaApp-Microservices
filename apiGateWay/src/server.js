@@ -115,9 +115,6 @@ app.use(
       ) {
         proxyReqOpts.headers["Content-Type"] = "application/json";
       }
-      // else {
-      //   proxyReqOpts.headers["Content-Type"] = srcReq.headers["content-type"];
-      // }
       return proxyReqOpts;
     },
     userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
@@ -126,7 +123,7 @@ app.use(
       );
       return proxyResData;
     },
-    parseReqBody: false,
+    parseReqBody: false, // imp
   })
 );
 //parseReqBody: false ***imp** for media service
