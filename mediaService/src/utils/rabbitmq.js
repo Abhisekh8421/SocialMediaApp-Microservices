@@ -33,4 +33,21 @@ async function publishEvent(routingKey, message) {
   logger.info(`Event published:${routingKey}`);
 }
 
-export { connectToRabbitMq, publishEvent };
+async function consumeEvent(routingKey, callback) {
+  if (!channel) {
+    await connectToRabbitMq();
+  }
+
+  const q = await channel.assertQueue("", { exclusive: true });
+  await channel.bindQueue(q.queue, EXCHANGE_NAME, routingKey);
+  channel.consume(q.queue, (msg) => {
+    if (msg !== null) {
+      const content = JSON.parse(msg.content.toString());
+      callback(content);
+      channel.ack(msg);
+    }
+  });
+  logger.info(`Subscribe to event : ${routingKey}`);
+}
+
+export { connectToRabbitMq, publishEvent, consumeEvent };
