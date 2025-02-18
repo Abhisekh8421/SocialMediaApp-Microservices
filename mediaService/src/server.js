@@ -9,7 +9,8 @@ import { errorHandler } from "./middlewares/errorHandler.js";
 import mediaRoutes from "./routes/mediaRoutes.js";
 import { rateLimit } from "express-rate-limit";
 import { RedisStore } from "rate-limit-redis";
-import { connectToRabbitMq } from "./utils/rabbitmq.js";
+import { connectToRabbitMq, consumeEvent } from "./utils/rabbitmq.js";
+import { handlePostDeleted } from "./events/media_event_handlers.js";
 
 dotenv.config();
 
@@ -59,6 +60,8 @@ app.use(errorHandler);
 async function startServer() {
   try {
     await connectToRabbitMq();
+    //consume events
+    await consumeEvent("post.deleted",handlePostDeleted)
     app.listen(PORT, () => {
       logger.info(`Media service running on port ${PORT}`);
     });
