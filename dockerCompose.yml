@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  apiGateWay:
+    build: ./apiGateWay
+    ports:
+      - "3000:3000"
+    env_file: ./apiGateWay/.env
+    depends_on:
+      - redis
+      - rabbitmq
+    environment:
+      - REDIS_URL = redis://redis:6379
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+
+
+  identityService:
+     build: ./identityService
+     ports:
+       -      
